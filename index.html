@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thulhaadhoo School - Countdown Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-color: #145A32; /* Main text: dark green */
+            --secondary-accent: #207A3C; /* Accent: another dark shade of green */
+            --glow-intensity: 0.6;
+            --night-overlay: 0.15;
+            --primary-bg: #ffffff; /* White background */
+            --secondary-bg: #e3f9e5; /* Soft green background (for subtle contrast) */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: none;
+            user-select: none;
+            transition: filter 0.5s ease;
+        }
+
+        body.night-mode {
+            filter: brightness(0.8) saturate(1.1);
+        }
+
+        /* ============================================================================
+           CLOCK PANEL (TOP-RIGHT)
+           ============================================================================ */
+        .clock-panel {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--secondary-accent);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 0 30px rgba(46, 204, 113, 0.5);
+            z-index: 1000;
+            min-width: 280px;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            line-height: 1.8;
+        }
+
+        .clock-time {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+            margin-bottom: 0.5rem;
+        }
+
+        .clock-label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        /* ============================================================================
+           HEADER SECTION
+           ============================================================================ */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem 2rem;
+            background: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-bottom: 3px solid var(--secondary-accent);
+            border-radius: 1.5rem;
+            margin: 1rem auto;
+            width: fit-content;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 0.5rem;
+        }
+
+        .school-name {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--secondary-accent);
+            text-shadow: none;
+            letter-spacing: 0.15em;
+            text-align: center;
+        }
+
+        /* ============================================================================
+           MAIN CONTENT AREA
+           ============================================================================ */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .countdown-grid.grid-1 {
+            grid-template-columns: 1fr;
+            max-width: 600px;
+            justify-items: center;
+        }
+
+        .countdown-grid.grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 1200px;
+        }
+
+        .countdown-grid.grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+            max-width: 1800px;
+            gap: 2rem;
+        }
+
+        .countdown-grid.grid-4 {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 1800px;
+        }
+
+        .hidden-card {
+            display: none;
+        }
+
+        /* ============================================================================
+           COUNTDOWN CARD
+           ============================================================================ */
+        .countdown-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--secondary-accent);
+            border-radius: 2rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(46, 204, 113, 0.5),
+                       inset 0 0 20px rgba(46, 204, 113, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .countdown-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .countdown-card:hover {
+            transform: translateY(-1rem);
+            box-shadow: 0 0 50px rgba(46, 204, 113, 0.6),
+                       inset 0 0 20px rgba(46, 204, 113, 0.15);
+        }
+
+        .card-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--secondary-accent);
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .countdown-display {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .countdown-unit {
+            background: rgba(46, 204, 113, 0.1);
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            border-radius: 1.5rem;
+            padding: 1.5rem 0.5rem;
+            position: relative;
+        }
+
+        .countdown-unit.pulse {
+            animation: pulse-glow 0.6s ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(46, 204, 113, 0.8);
+            }
+        }
+
+        .countdown-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+            transition: transform 0.3s ease;
+        }
+
+        .countdown-unit.pulse .countdown-number {
+            animation: number-bounce 0.4s ease;
+        }
+
+        @keyframes number-bounce {
+            0% { transform: scale(1.2); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .countdown-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary-accent);
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .event-status {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            letter-spacing: 0.1em;
+            margin-top: 1rem;
+        }
+
+        .target-date {
+            font-size: 0.85rem;
+            color: rgba(46, 204, 113, 0.6);
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+
+        /* ============================================================================
+           FOOTER SECTION
+           ============================================================================ */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-top: 2px solid var(--secondary-accent);
+        }
+
+        .footer-text {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
+        }
+
+        /* ============================================================================
+           RESPONSIVE DESIGN
+           ============================================================================ */
+        @media (max-width: 1920px) {
+            .school-name {
+                font-size: 3.5rem;
+            }
+        }
+
+        @media (max-width: 1400px) {
+            .header {
+                gap: 1rem;
+                padding: 1.5rem;
+            }
+            .logo {
+                width: 80px;
+                height: 80px;
+            }
+            .school-name {
+                font-size: 2.8rem;
+            }
+            .countdown-grid {
+                grid-template-columns: 1fr;
+            }
+            .countdown-card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ============================================================================
+           EVENT MANAGER PANEL (BOTTOM-LEFT)
+           ============================================================================ */
+        .event-manager-toggle {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            width: 50px;
+            height: 50px;
+            background: var(--secondary-accent);
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            z-index: 1001;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .event-manager-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(46, 204, 113, 0.8);
+        }
+
+        .event-manager-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* ============================================================================
+           FULLSCREEN BUTTON (BOTTOM-RIGHT)
+           ============================================================================ */
+        .fullscreen-toggle {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 50px;
+            height: 50px;
+            background: var(--secondary-accent);
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            z-index: 1001;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .fullscreen-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(46, 204, 113, 0.8);
+        }
+
+        .fullscreen-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* Hide event manager when in fullscreen */
+        body.fullscreen .event-manager-toggle {
+            display: none !important;
+        }
+
+        .event-manager-panel {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 70px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid var(--secondary-accent);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 0 30px rgba(46, 204, 113, 0.5);
+            display: none !important;
+            animation: slideIn 0.3s ease;
+            pointer-events: auto;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .event-manager-panel.active {
+            display: block !important;
+        }
+
+        .event-manager-title {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--secondary-accent);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .event-input-group {
+            margin-bottom: 1rem;
+        }
+
+        .event-input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            margin-bottom: 0.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .event-input-group input {
+            width: 100%;
+            padding: 0.7rem;
+            background: rgba(32, 122, 60, 0.08);
+            border: 1px solid var(--secondary-accent);
+            border-radius: 0.5rem;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+        }
+
+        .event-input-group input::placeholder {
+            color: rgba(20, 90, 50, 0.5);
+        }
+
+        .event-input-group input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+        }
+
+        .event-button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .event-button {
+            flex: 1;
+            padding: 0.7rem;
+            background: var(--secondary-accent);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .event-button:hover {
+            background: #20b85d;
+            transform: translateY(-2px);
+        }
+
+        .event-button.danger {
+            background: #e74c3c;
+        }
+
+        .event-button.danger:hover {
+            background: #c0392b;
+        }
+
+        .event-list {
+            border-top: 1px solid rgba(46, 204, 113, 0.3);
+            padding-top: 1rem;
+        }
+
+        .event-item {
+            color: var(--accent-color);
+            background: rgba(46, 204, 113, 0.05);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.7rem;
+            margin-bottom: 0.7rem;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event-item-info {
+            flex: 1;
+        }
+
+        .event-item-title {
+            font-weight: 700;
+            color: var(--secondary-accent);
+        }
+
+        .event-item-date {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.3rem;
+        }
+
+        .event-item-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.7rem;
+            border-radius: 0.3rem;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .event-item-delete:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <!-- ========================================================================
+         CLOCK PANEL (TOP-RIGHT)
+         ======================================================================== -->
+    <div class="clock-panel">
+        <div class="clock-time" id="clockTime">--:--:--</div>
+        <div class="clock-label">Gregorian</div>
+        <div id="gregorianDate">--/--/----</div>
+        <div class="clock-label">Hijri</div>
+        <div id="hijriDate">--/--/----</div>
+    </div>
+
+    <!-- ========================================================================
+         HEADER WITH LOGO AND SCHOOL NAME
+         ======================================================================== -->
+    <div class="header">
+        <div class="logo">
+            <img src="logo.png" alt="Thulhaadhoo School Logo" onerror="this.style.display='none';">
+        </div>
+        <div class="school-name">THULHAADHOO SCHOOL</div>
+    </div>
+
+    <!-- ========================================================================
+         MAIN COUNTDOWN CARDS
+         ======================================================================== -->
+    <div class="main-content">
+        <div class="countdown-grid" id="countdownGrid">
+            <!-- Cards will be generated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- ========================================================================
+         FOOTER
+         ======================================================================== -->
+    <div class="footer">
+        <div class="footer-text">Success Through Fortitude</div>
+    </div>
+
+    <!-- ========================================================================
+         EVENT MANAGER PANEL
+         ======================================================================== -->
+    <div class="event-manager-toggle" id="managerToggle" title="Click to manage events" onclick="toggleEventManager(); return false;" style="user-select: none; pointer-events: auto;">⚙️</div>
+    
+    <!-- ========================================================================
+         FULLSCREEN BUTTON
+         ======================================================================== -->
+    <div class="fullscreen-toggle" id="fullscreenToggle" title="Toggle fullscreen" onclick="toggleFullscreen(); return false;" style="user-select: none; pointer-events: auto;">🖥️</div>
+    
+    <div class="event-manager-panel" id="eventManagerPanel" style="pointer-events: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div class="event-manager-title">📋 Manage Events</div>
+            <button onclick="closeEventManager(); return false;" style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; width: 30px; height: 30px;">✕</button>
+        </div>
+        
+        <div class="event-input-group">
+            <label>Event Title</label>
+            <input type="text" id="eventTitle" placeholder="e.g., School Assembly">
+        </div>
+        
+        <div class="event-input-group">
+            <label>Date & Time (YYYY-MM-DD HH:MM)</label>
+            <input type="datetime-local" id="eventDateTime">
+        </div>
+        
+        <div class="event-button-group">
+            <button class="event-button" id="addEventBtn">Add Event</button>
+            <button class="event-button danger" id="clearAllBtn">Clear All</button>
+        </div>
+        
+        <div class="event-list" id="eventList">
+            <!-- Events will be listed here -->
+        </div>
+    </div>
+
+    <script>
+        // ========================================================================
+        // HELPER FUNCTIONS FOR EVENT MANAGER & FULLSCREEN
+        // ========================================================================
+        function toggleEventManager() {
+            console.log('=== toggleEventManager CALLED ===');
+            const panel = document.getElementById('eventManagerPanel');
+            console.log('Panel element found:', !!panel);
+            if (panel) {
+                console.log('Current classes:', panel.className);
+                console.log('Has active class:', panel.classList.contains('active'));
+                panel.classList.toggle('active');
+                console.log('After toggle, has active class:', panel.classList.contains('active'));
+                console.log('Display style:', window.getComputedStyle(panel).display);
+            } else {
+                console.log('ERROR: Panel not found!');
+            }
+        }
+
+        function closeEventManager() {
+            console.log('=== closeEventManager CALLED ===');
+            const panel = document.getElementById('eventManagerPanel');
+            if (panel) {
+                panel.classList.remove('active');
+                console.log('Panel closed, classes:', panel.className);
+            }
+        }
+
+        function toggleFullscreen() {
+            console.log('=== toggleFullscreen CALLED ===');
+            const html = document.documentElement;
+            
+            // Check if already in fullscreen
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+                console.log('Exiting fullscreen');
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                }
+                document.body.classList.remove('fullscreen');
+                document.getElementById('fullscreenToggle').textContent = '🖥️';
+            } else {
+                console.log('Entering fullscreen');
+                if (html.requestFullscreen) {
+                    html.requestFullscreen();
+                } else if (html.webkitRequestFullscreen) {
+                    html.webkitRequestFullscreen();
+                } else if (html.mozRequestFullScreen) {
+                    html.mozRequestFullScreen();
+                }
+                document.body.classList.add('fullscreen');
+                document.getElementById('fullscreenToggle').textContent = '⛔';
+            }
+        }
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                document.body.classList.remove('fullscreen');
+                document.getElementById('fullscreenToggle').textContent = '🖥️';
+            }
+        });
+
+        // Test if functions are accessible globally
+        window.toggleEventManager = toggleEventManager;
+        window.closeEventManager = closeEventManager;
+        window.toggleFullscreen = toggleFullscreen;
+        console.log('Global functions registered');
+
+        // ========================================================================
+        // CONFIGURATION - EDIT THESE VALUES
+        // ========================================================================
+        
+        // Enable/Disable Google Sheets auto-update
+        const USE_GOOGLE_SHEET = false;
+        
+        // Google Apps Script Web App URL (if USE_GOOGLE_SHEET is true)
+        // Instructions: Deploy a Google Apps Script as a web app that returns JSON
+        const SHEET_URL = 'https://script.google.com/macros/d/YOUR_DEPLOYMENT_ID/useweb?action=getData';
+        
+        // Local countdown targets (used if USE_GOOGLE_SHEET is false)
+        const TARGETS = [
+            {
+                title: "O Level Exam",
+                targetDate: new Date("2026-05-15 08:00:00"),
+                eventIcon: "📚"
+            },
+            {
+                title: "A Level Exam",
+                targetDate: new Date("2026-08-20 08:00:00"),
+                eventIcon: "🎓"
+            },
+            {
+                title: "School 90th Anniversary",
+                targetDate: new Date("2026-07-10 09:00:00"),
+                eventIcon: "🎉"
+            }
+        ];
+
+        // Day/Night mode times (24-hour format)
+        const DAY_START = 6;   // 06:00 - Light mode
+        const NIGHT_START = 18; // 18:00 - Dark/Night mode
+        
+        // Initialize global countdown configs array
+        let countdownConfigs = [...TARGETS];
+        
+        // ========================================================================
+        // FILTER VALID EVENTS AND UPDATE GRID LAYOUT
+        // ========================================================================
+        function filterValidEvents(configs) {
+            return configs.filter(config => {
+                // Check if config exists and has valid target date
+                if (!config || !config.title || !config.targetDate) {
+                    return false;
+                }
+                
+                // Check if title is not empty
+                if (typeof config.title === 'string' && config.title.trim() === '') {
+                    return false;
+                }
+                
+                // Check if targetDate is valid
+                const date = new Date(config.targetDate);
+                if (isNaN(date.getTime())) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        function updateGridLayout(validCount) {
+            const grid = document.getElementById('countdownGrid');
+            
+            // Remove all grid layout classes
+            grid.classList.remove('grid-1', 'grid-2', 'grid-3', 'grid-4');
+            
+            // Apply appropriate grid class based on valid event count
+            if (validCount === 1) {
+                grid.classList.add('grid-1');
+            } else if (validCount === 2) {
+                grid.classList.add('grid-2');
+            } else if (validCount === 3) {
+                grid.classList.add('grid-3');
+            } else if (validCount >= 4) {
+                grid.classList.add('grid-4');
+            }
+        }
+
+        // Hide cursor after 5 seconds of inactivity
+        let cursorTimeout;
+        const hideCursor = () => {
+            document.body.style.cursor = 'none';
+        };
+
+        const showCursor = () => {
+            document.body.style.cursor = 'auto';
+            clearTimeout(cursorTimeout);
+            cursorTimeout = setTimeout(hideCursor, 5000);
+        };
+
+        document.addEventListener('mousemove', showCursor);
+        document.addEventListener('click', showCursor);
+        cursorTimeout = setTimeout(hideCursor, 5000);
+
+        // ========================================================================
+        // CLOCK & HIJRI DATE UPDATE
+        // ========================================================================
+        function updateClock() {
+            const now = new Date();
+            
+            // Update time (HH:MM:SS)
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('clockTime').textContent = timeStr;
+            
+            // Update Gregorian date (DD Month YYYY Weekday)
+            const gregorianStr = now.toLocaleDateString('en-US', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                weekday: 'long'
+            });
+            document.getElementById('gregorianDate').textContent = gregorianStr;
+            
+            // Update Hijri date (Islamic calendar - DD Month YYYY)
+            try {
+                const hijriFormatter = new Intl.DateTimeFormat('en-u-ca-islamic', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                });
+                const hijriStr = hijriFormatter.format(now);
+                document.getElementById('hijriDate').textContent = hijriStr;
+            } catch (e) {
+                document.getElementById('hijriDate').textContent = 'N/A';
+            }
+        }
+
+        // ========================================================================
+        // DAY/NIGHT MODE AUTO-TOGGLE
+        // ========================================================================
+        function applyDayNight() {
+            const now = new Date();
+            const hour = now.getHours();
+            
+            if (hour >= DAY_START && hour < NIGHT_START) {
+                // Day mode: remove night-mode class
+                document.body.classList.remove('night-mode');
+            } else {
+                // Night mode: add night-mode class
+                document.body.classList.add('night-mode');
+            }
+        }
+
+        // ========================================================================
+        // GOOGLE SHEET FETCHING (Optional)
+        // ========================================================================
+        async function fetchSheet() {
+            if (!USE_GOOGLE_SHEET) {
+                return countdownConfigs;
+            }
+
+            try {
+                // Check cache first (5-minute TTL)
+                const cached = localStorage.getItem('thulhaadhoo_sheet_cache');
+                const cacheTime = localStorage.getItem('thulhaadhoo_sheet_time');
+                const now = Date.now();
+
+                if (cached && cacheTime && (now - parseInt(cacheTime)) < 300000) {
+                    // Cache is still valid (less than 5 minutes old)
+                    return JSON.parse(cached);
+                }
+
+                // Fetch from Google Apps Script
+                const response = await fetch(SHEET_URL);
+                if (!response.ok) throw new Error('Sheet fetch failed');
+
+                const data = await response.json();
+
+                // Cache the result
+                localStorage.setItem('thulhaadhoo_sheet_cache', JSON.stringify(data));
+                localStorage.setItem('thulhaadhoo_sheet_time', now.toString());
+
+                return data;
+            } catch (error) {
+                console.error('Error fetching sheet:', error);
+                // Fall back to local config on error
+                return countdownConfigs;
+            }
+        }
+
+        // ========================================================================
+        // COUNTDOWN INITIALIZATION & UPDATE
+        // ========================================================================
+        function initializeCountdownCards() {
+            const grid = document.getElementById('countdownGrid');
+            grid.innerHTML = '';
+
+            // Filter valid events
+            const validConfigs = filterValidEvents(countdownConfigs);
+            
+            // Update grid layout based on valid count
+            updateGridLayout(validConfigs.length);
+
+            validConfigs.forEach((config, index) => {
+                const card = document.createElement('div');
+                card.className = 'countdown-card';
+                card.id = `card-${index}`;
+                card.innerHTML = `
+                    <div class="card-title">${config.title}</div>
+                    <div class="countdown-display">
+                        <div class="countdown-unit">
+                            <div class="countdown-number" id="days-${index}">00</div>
+                            <div class="countdown-label">Days</div>
+                        </div>
+                        <div class="countdown-unit">
+                            <div class="countdown-number" id="hours-${index}">00</div>
+                            <div class="countdown-label">Hours</div>
+                        </div>
+                        <div class="countdown-unit">
+                            <div class="countdown-number" id="minutes-${index}">00</div>
+                            <div class="countdown-label">Minutes</div>
+                        </div>
+                        <div class="countdown-unit" id="seconds-unit-${index}">
+                            <div class="countdown-number" id="seconds-${index}">00</div>
+                            <div class="countdown-label">Seconds</div>
+                        </div>
+                    </div>
+                    <div class="event-status" id="status-${index}"></div>
+                    <div class="target-date" id="date-${index}"></div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateCountdowns() {
+            const now = new Date();
+            const validConfigs = filterValidEvents(countdownConfigs);
+
+            validConfigs.forEach((config, index) => {
+                const targetDate = new Date(config.targetDate);
+                const timeDiff = targetDate - now;
+
+                if (timeDiff <= 0) {
+                    // Event has started or passed
+                    document.getElementById(`days-${index}`).textContent = '00';
+                    document.getElementById(`hours-${index}`).textContent = '00';
+                    document.getElementById(`minutes-${index}`).textContent = '00';
+                    document.getElementById(`seconds-${index}`).textContent = '00';
+                    document.getElementById(`status-${index}`).textContent = '🚀 EVENT STARTED! 🚀';
+                } else {
+                    // Calculate time units
+                    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+                    // Format and update display
+                    document.getElementById(`days-${index}`).textContent = String(days).padStart(2, '0');
+                    document.getElementById(`hours-${index}`).textContent = String(hours).padStart(2, '0');
+                    document.getElementById(`minutes-${index}`).textContent = String(minutes).padStart(2, '0');
+
+                    // Add pulse animation to seconds unit on every second change
+                    const secondsUnit = document.getElementById(`seconds-unit-${index}`);
+                    const oldSeconds = document.getElementById(`seconds-${index}`).textContent;
+                    document.getElementById(`seconds-${index}`).textContent = String(seconds).padStart(2, '0');
+
+                    if (oldSeconds !== String(seconds).padStart(2, '0')) {
+                        secondsUnit.classList.remove('pulse');
+                        void secondsUnit.offsetWidth; // Trigger reflow to restart animation
+                        secondsUnit.classList.add('pulse');
+                    }
+
+                    // Clear event status if countdown is running
+                    document.getElementById(`status-${index}`).textContent = '';
+                }
+
+                // Display target date info
+                const dateStr = targetDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const timeStr = targetDate.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                document.getElementById(`date-${index}`).textContent = `${dateStr} at ${timeStr}`;
+            });
+        }
+
+        // ========================================================================
+        // WAKE LOCK - KEEP SCREEN AWAKE
+        // ========================================================================
+        const requestWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    await navigator.wakeLock.request('screen');
+                    console.log('Wake lock acquired');
+                } catch (err) {
+                    console.log('Wake lock not available:', err);
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+
+        // ========================================================================
+        // EVENT MANAGER - ADD/REMOVE EVENTS
+        // ========================================================================
+        function saveEventsToStorage() {
+            localStorage.setItem('thulhaadhoo_events', JSON.stringify(countdownConfigs));
+        }
+
+        function loadEventsFromStorage() {
+            const stored = localStorage.getItem('thulhaadhoo_events');
+            if (stored) {
+                try {
+                    countdownConfigs = JSON.parse(stored);
+                } catch (e) {
+                    console.log('Could not load stored events');
+                }
+            }
+        }
+
+        function updateEventList() {
+            const eventList = document.getElementById('eventList');
+            eventList.innerHTML = '';
+
+            countdownConfigs.forEach((event, index) => {
+                const eventItem = document.createElement('div');
+                eventItem.className = 'event-item';
+                
+                const dateObj = new Date(event.targetDate);
+                const dateStr = dateObj.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                eventItem.innerHTML = `
+                    <div class="event-item-info">
+                        <div class="event-item-title">${event.title}</div>
+                        <div class="event-item-date">${dateStr}</div>
+                    </div>
+                    <button class="event-item-delete" data-index="${index}">Delete</button>
+                `;
+
+                eventList.appendChild(eventItem);
+            });
+
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.event-item-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    countdownConfigs.splice(index, 1);
+                    saveEventsToStorage();
+                    updateEventList();
+                    initializeCountdownCards();
+                    updateCountdowns();
+                });
+            });
+        }
+
+        // Event listeners are now attached in DOMContentLoaded
+
+        // ========================================================================
+        // INITIALIZATION ON PAGE LOAD
+        // ========================================================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load saved events from localStorage or use defaults
+            loadEventsFromStorage();
+            
+            // Load targets (from Google Sheet or local config)
+            if (USE_GOOGLE_SHEET) {
+                countdownConfigs = await fetchSheet();
+            }
+            
+            // Initialize cards and start updates
+            initializeCountdownCards();
+            updateEventList();
+            updateCountdowns();
+            updateClock();
+            applyDayNight();
+            requestWakeLock();
+            
+            // ====== ATTACH EVENT LISTENERS (after DOM is ready) ======
+            console.log('Attaching event listeners...');
+
+            document.getElementById('addEventBtn').addEventListener('click', () => {
+                console.log('=== ADD EVENT BUTTON CLICKED ===');
+                try {
+                    const title = document.getElementById('eventTitle').value.trim();
+                    const dateTimeInput = document.getElementById('eventDateTime').value;
+
+                    console.log('Title value:', title);
+                    console.log('DateTime value:', dateTimeInput);
+
+                    if (!title || !dateTimeInput) {
+                        console.log('Validation failed - title or dateTime missing');
+                        alert('Please fill in both title and date/time');
+                        return;
+                    }
+
+                    // Convert datetime-local to Date object
+                    const dateObj = new Date(dateTimeInput);
+                    
+                    console.log('Creating event with date:', dateObj);
+                    console.log('Date is valid:', !isNaN(dateObj.getTime()));
+
+                    countdownConfigs.push({
+                        title: title,
+                        targetDate: dateObj,
+                        eventIcon: '📌'
+                    });
+
+                    console.log('Event added. Total events:', countdownConfigs.length);
+                    console.log('All configs:', countdownConfigs);
+
+                    saveEventsToStorage();
+                    
+                    // Clear inputs
+                    document.getElementById('eventTitle').value = '';
+                    document.getElementById('eventDateTime').value = '';
+
+                    console.log('Calling updateEventList...');
+                    updateEventList();
+                    
+                    console.log('Calling initializeCountdownCards...');
+                    initializeCountdownCards();
+                    
+                    console.log('Calling updateCountdowns...');
+                    updateCountdowns();
+                    
+                    alert('Event added successfully! ✅');
+                    console.log('=== ADD EVENT COMPLETED SUCCESSFULLY ===');
+                } catch (error) {
+                    console.error('ERROR in Add Event handler:', error);
+                    alert('Error adding event: ' + error.message);
+                }
+            });
+
+            document.getElementById('clearAllBtn').addEventListener('click', () => {
+                if (confirm('Delete all events? This cannot be undone.')) {
+                    countdownConfigs = [];
+                    saveEventsToStorage();
+                    updateEventList();
+                    initializeCountdownCards();
+                    updateCountdowns();
+                }
+            });
+            // ====== END EVENT LISTENERS ======
+            
+            // Update clock and countdowns every second
+            setInterval(() => {
+                updateClock();
+                updateCountdowns();
+            }, 1000);
+            
+            // Check day/night mode every minute (at :00 seconds)
+            setInterval(() => {
+                applyDayNight();
+            }, 60000);
+            
+            // Refresh Google Sheet every 5 minutes (if enabled)
+            if (USE_GOOGLE_SHEET) {
+                setInterval(async () => {
+                    countdownConfigs = await fetchSheet();
+                    initializeCountdownCards();
+                    updateCountdowns();
+                }, 300000);
+            }
+        });
+
+        // Prevent default context menu on TV display
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // Prevent accidental keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.altKey || e.key === 'F12') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
